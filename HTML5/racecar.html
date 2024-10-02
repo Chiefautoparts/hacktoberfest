@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Racecar</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+			overflow: hidden;
+			font-family: Arial, sans-serif;
+		}
+		canvas {
+			display: block;
+			background-color: #333;
+		}
+
+		#score {
+			position: absolute;
+			top: 10px;
+			left: 10px;
+			color: white;
+			font-size: 20px;
+		}
+
+		
+	</style>
+</head>
+<body>
+ <canvas id="gameCanvas"></canvas>
+    <div id="score">Score: 0</div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const carWidth = 50;
+        const carHeight = 100;
+        const roadWidth = canvas.width * 0.5;
+        const roadLeft = (canvas.width - roadWidth) / 2;
+
+        const car = {
+            x: canvas.width / 2 - carWidth / 2,
+            y: canvas.height - carHeight - 20,
+            width: carWidth,
+            height: carHeight,
+            speed: 5
+        };
+
+        let obstacles = [];
+        let obstacleSpeed = 3;
+        let score = 0;
+        let gameRunning = true;
+
+        function drawCar() {
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(car.x, car.y, car.width, car.height);
+        }
+
+        function createObstacle() {
+            const obstacleWidth = Math.random() * (carWidth * 2) + carWidth;
+            const obstacleX = roadLeft + Math.random() * (roadWidth - obstacleWidth);
+            obstacles.push({
+                x: obstacleX,
+                y: -carHeight,
+                width: obstacleWidth,
+                height: carHeight
+            });
+        }
+
+        function drawObstacles() {
+            ctx.fillStyle = 'red';
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        function moveObstacles() {
+            obstacles.forEach(obstacle => {
+                obstacle.y += obstacleSpeed;
+            });
+            obstacles = obstacles.filter(obstacle => obstacle.y < canvas.height);
+        }
+
+        function checkCollision() {
+            for (let i = 0; i < obstacles.length; i++) {
+                const obs = obstacles[i];
+                if (car.x < obs.x + obs.width &&
+                    car.x + car.width > obs.x &&
+                    car.y < obs.y + obs.height &&
+                    car.height + car.y > obs.y) {
+                    gameRunning = false;
+                }
+            }
+        }
+
+        function updateScore() {
+            score += 1;
+            scoreDisplay.innerText = 'Score: ' + score;
+        }
+
+        function gameLoop() {
+            if (!gameRunning) {
+                ctx.font = '50px Arial';
+                ctx.fillStyle = 'white';
+                ctx.fillText('Game Over!', canvas.width / 2 - 150, canvas.height / 2);
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawCar();
+            drawObstacles();
+            moveObstacles();
+            checkCollision();
+            updateScore();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Keyboard control
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowLeft' && car.x > roadLeft) {
+                car.x -= car.speed;
+            }
+            if (e.key === 'ArrowRight' && car.x + car.width < roadLeft + roadWidth) {
+                car.x += car.speed;
+            }
+        });
+
+        // Start the game
+        setInterval(createObstacle, 1500);
+        gameLoop();
+    </script>
+</body>
+</html>
